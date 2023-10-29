@@ -45,6 +45,49 @@ CHARSET_LOCATION        = $F800
 * = $0801
 
 !basic
+
+          sei  ;; switch off interrupt
+
+          lda #$35 ;; all RAM except D000-Dfff
+          sta $01  ;; write to $FFFA/$FFFB now possible
+          lda #<nmiRoutine ;; change nmi vector to nmiRoutine
+          sta $FFFA
+          lda #>nmiRoutine
+          sta $FFFB
+          lda #$00  ;; stop Timer A
+          sta $DD0E
+          sta $DD04 ;; set Timer A to 0, after starting
+          sta $DD05 ;; NMI will occur immediately
+          lda #$81
+          sta $DD0D ;; set Timer A as source for NMI
+          lda #$01
+          sta $DD0E ;; start Timer A -> NMI
+          ;; from here on NMI is disabled
+
+          ;Turn off CIA interrupts
+          nop
+          nop
+          nop
+          lda #$7f
+          sta CIA1.IRQ_CONTROL
+          sta CIA2.NMI_CONTROL
+
+          lda #$37 ;; all RAM except D000-Dfff
+          sta PROCESSOR_PORT  ;; write to $FFFA/$FFFB now possible
+
+          ;clear keyboard buffer
+          lda #$00
+          sta $C6
+
+          ;disable run/stop + restore keys!
+          lda #$FC
+          sta $0328
+
+          ;disable shift-commodore
+          lda #$80
+          sta $0291
+
+
           lda #$0e
           sta VIC.MEMORY_CONTROL
 
@@ -155,6 +198,10 @@ CHARSET_LOCATION        = $F800
           jsr InitGameIRQ
 
           jmp Title
+
+
+nmiRoutine
+          rti ;; exit interrupt not acknowledged
 
 
 * = $1000

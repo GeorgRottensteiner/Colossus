@@ -1350,7 +1350,8 @@ SHOT_DELTA_Y
           sta PARAM2
           lda #TYPE_LARVA
           sta PARAM3
-          jsr AddObject
+          ldx #2
+          jsr AddObjectStartingWithSlot
           ldx CURRENT_INDEX
 
 +
