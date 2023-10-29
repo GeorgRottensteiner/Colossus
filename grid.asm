@@ -31,6 +31,7 @@ EXIT_E        = $08
 .PlaceNextSpecialScreen
 .IsColliding
           jsr GeneratePseudoRandomNumber
+          sta LOCAL2
           cpy #0
           beq .CanPlace
 
@@ -39,7 +40,15 @@ EXIT_E        = $08
 
           ldy #0
 -
+          ;same screen?
+          lda LOCAL2
           cmp SPECIAL_SCREENS,y
+          beq .IsColliding
+
+          lda SPECIAL_SCREENS,y
+          clc
+          adc SPECIAL_SCREEN_NEIGHBOUR_SCREEN_OFFSET,y
+          cmp LOCAL2
           beq .IsColliding
 
           iny
@@ -47,6 +56,7 @@ EXIT_E        = $08
           bne -
 
 .CanPlace
+          lda LOCAL2
           sta SPECIAL_SCREENS,y
           tax
           lda #$80
@@ -163,9 +173,30 @@ EXIT_E        = $08
 
 .ScreenConnected
           dec PARAM3
-          lda PARAM3
-          bne .ConnectNextScreen
 
+          ;lda #1
+;          sta SCREEN_COLOR + 3
+;          sta SCREEN_COLOR + 4
+;
+;          lda PARAM3
+;          lsr
+;          lsr
+;          lsr
+;          lsr
+;          and #$0f
+;          tay
+;          lda HEX_DISPLAY,y
+;          sta SCREEN_CHAR + 3
+;          lda PARAM3
+;          and #$0f
+;          tay
+;          lda HEX_DISPLAY,y
+;          sta SCREEN_CHAR + 4
+
+          lda PARAM3
+          beq +
+          jmp .ConnectNextScreen
++
           ;connect special screens
           ;TODO - make sure special screens are not arranged to map exits into other special screens
 
@@ -232,7 +263,7 @@ EXIT_E        = $08
           jsr PlaySoundEffect
 
           lda VIC.SPRITE_ENABLE
-          pha
+          sta .SPRITE_STATE_STORED
 
           lda #0
           sta VIC.SPRITE_ENABLE
@@ -272,6 +303,8 @@ EXIT_E        = $08
           beq .FoundSpecialScreen
 
           iny
+          cpy #4
+          beq .SpecialFlagButNotSpecialScreen
           jmp .NextSpecialScreen
 
 .FoundSpecialScreen
@@ -282,7 +315,8 @@ EXIT_E        = $08
           jmp .NotExplored
 
 
-
+.SpecialFlagButNotSpecialScreen
+          ldy LOCAL1
 .RegularScreen
           lda SCREEN_GRID,x
           and #$0f
@@ -385,7 +419,7 @@ EXIT_E        = $08
           jsr BuildScreen
           dec MAP_MODE
 
-          pla
+          lda .SPRITE_STATE_STORED
           sta VIC.SPRITE_ENABLE
 
           ldy #SFX_BONUS_BLIP
@@ -394,6 +428,9 @@ EXIT_E        = $08
           jsr ScreenOn
 
           rts
+
+.SPRITE_STATE_STORED
+          !byte 0
 
 
 
@@ -407,6 +444,12 @@ SCREEN_GRID
 
 SPECIAL_SCREENS
           !fill NUM_SPECIAL_SCREENS
+
+SPECIAL_SCREEN_NEIGHBOUR_SCREEN_OFFSET
+          !byte -16     ;mouth
+          !byte 1       ;left eye
+          !byte -1      ;right eye
+          !byte 16      ;heart
 
 BLINK_DELAY
           !byte 0

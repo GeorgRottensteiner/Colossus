@@ -3,6 +3,10 @@
 
           jsr RemoveAllObjects
 
+          lda #10
+          sta VIC.CHARSET_MULTICOLOR_1
+
+
           ldx #0
 -
           lda #32

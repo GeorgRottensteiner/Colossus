@@ -1,6 +1,7 @@
-TILE_FLOOR      = 0
-TILE_WALL_TOP   = 4
-TILE_WALL       = 12
+TILE_FLOOR        = 0
+TILE_WALL_TOP     = 4
+TILE_WALL         = 12
+TILE_FLOOR_SHADOW = 16
 
 LEVEL_WIDTH   = 20
 LEVEL_HEIGHT  = 12
@@ -37,8 +38,21 @@ LEVEL_HEIGHT  = 12
           inc GAME_DIFFICULTY
 
 +
-
 .AlreadyVisited
+          lda CURRENT_SCREEN_GRID
+          lsr
+          lsr
+          lsr
+          lsr
+          lsr
+          lsr
+          tay
+          lda LEVEL_COLOR_BG,y
+          sta CURRENT_BG
+          lda LEVEL_COLOR_MC_1,y
+          sta VIC.CHARSET_MULTICOLOR_1
+
+
           ;current screen is seed
           ldx CURRENT_SCREEN_GRID
           stx PSEUDO_RANDOM_SEED
@@ -264,10 +278,10 @@ LEVEL_HEIGHT  = 12
 ENEMY_LIST
           !byte TYPE_LARVA
           !byte TYPE_AMOEBA
-          !byte TYPE_LARVA
+          !byte TYPE_POST
           !byte TYPE_AMOEBA
           !byte TYPE_LARVA
-          !byte TYPE_AMOEBA
+          !byte TYPE_POST
 
 
 
@@ -296,6 +310,9 @@ ENEMY_LIST
           beq .Heart
 
           ;start/tongue screen
+          lda MAP_MODE
+          bne .BeautifyLevel
+
           ldy CURRENT_SPECIAL_SCREEN
           lda SCREEN_GRID,y
           and #$20
@@ -313,6 +330,9 @@ ENEMY_LIST
 
 .Heart
           ;heart screen
+          lda MAP_MODE
+          bne .BeautifyLevel
+
           ldy CURRENT_SPECIAL_SCREEN
           lda SCREEN_GRID,y
           and #$20
@@ -328,6 +348,9 @@ ENEMY_LIST
           jmp .BeautifyLevel
 
 .Eye
+          lda MAP_MODE
+          bne .BeautifyLevel
+
           ldy CURRENT_SPECIAL_SCREEN
           lda SCREEN_GRID,y
           and #$20
@@ -353,6 +376,8 @@ ENEMY_LIST
           cmp #TILE_WALL_TOP
           beq .Randomize
           cmp #TILE_WALL
+          beq .Randomize
+          cmp #TILE_FLOOR_SHADOW
           beq .Randomize
 
           jmp .NoRandomize
@@ -548,7 +573,9 @@ ENEMY_LIST
           tay
           lda ENEMY_LIST,y
           sta PARAM3
-          jsr AddObject
+          ldx #2
+          jsr AddObjectStartingWithSlot
+          beq .NoSlotFree
 
           ;every xth enemy is twice as strong
           jsr GenerateRandomNumber
@@ -560,6 +587,7 @@ ENEMY_LIST
 
 +
 
+.NoSlotFree
           dec PARAM12
           beq .NoEnemies
           jmp .AnotherEnemy
@@ -621,6 +649,11 @@ MAP_MODE
 LEVEL_TILES
           !fill LEVEL_WIDTH * LEVEL_HEIGHT
 
+LEVEL_COLOR_BG
+          !byte 2,5,6,12
+
+LEVEL_COLOR_MC_1
+          !byte 10,13,14,15
 
 
 

@@ -68,7 +68,7 @@ BOTTOM_BORDER_RASTER_POS = 242
           ora SCREEN_OFF
           sta VIC.CONTROL_1
 
-          lda #2
+          lda CURRENT_BG
           sta VIC.BACKGROUND_COLOR
 
           ;nr of rasterline we want our irq occur at

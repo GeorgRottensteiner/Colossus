@@ -1,4 +1,4 @@
-NUM_SPRITES = 35
+NUM_SPRITES = 36
 
 ;placeholder for various temp parameters
 PARAM1                  = $03
@@ -71,6 +71,7 @@ CHARSET_LOCATION        = $F800
 
           lda #2
           sta VIC.BACKGROUND_COLOR
+          sta CURRENT_BG
 
 
           sei

@@ -19,22 +19,67 @@
           ;lda #6
           ;sta GAME_DIFFICULTY
 
-          ;inc VIC.BORDER_COLOR
+          ;hang 4, after 3
+
+          ;lda #0
+          ;sta GAME_MAIN_SEED
           jsr InitGrid
-          ;inc VIC.BORDER_COLOR
+;
+;          ldx #0
+;-
+;          lda SCREEN_GRID,x
+;          ora #$40
+;          sta SCREEN_GRID,x
+;          inx
+;          bne -
+;
+;          jsr DisplayMap
+;
+;          lda #4
+;          sta GAME_MAIN_SEED
 
-
-          ;debug - fudge special screen
-          ;lda SPECIAL_SCREENS
-          ;sec
-          ;sbc #SCREEN_GRID_WIDTH
-          ;sta SPECIAL_SCREENS + 3
-          ;tax
-          ;lda #$82
-          ;sta SCREEN_GRID,x
-
-          jsr RemoveAllObjects
-
+;--
+;          lda GAME_MAIN_SEED
+;          lsr
+;          lsr
+;          lsr
+;          lsr
+;          and #$0f
+;          tay
+;          lda HEX_DISPLAY,y
+;          sta SCREEN_CHAR
+;          lda GAME_MAIN_SEED
+;          and #$0f
+;          tay
+;          lda HEX_DISPLAY,y
+;          sta SCREEN_CHAR + 1
+;
+;          jsr InitGrid
+;
+;          ldx #0
+;-
+;          lda SCREEN_GRID,x
+;          ora #$40
+;          sta SCREEN_GRID,x
+;          inx
+;          bne -
+;
+;          jsr DisplayMap
+;-
+;          jsr WaitFrame
+;          jsr KERNAL.SCNKEY
+;          jsr KERNAL.GETIN
+;          beq -
+;
+;          inc GAME_MAIN_SEED
+;          jmp --
+;
+;
+;HEX_DISPLAY
+;          !scr "0123456789abcdef"
+;
+;          jsr RemoveAllObjects
+;
           ldx #0
 -
           lda PANEL,x
@@ -48,6 +93,8 @@
           ;place in start screen
           lda SPECIAL_SCREENS
           sta CURRENT_SCREEN_GRID
+
+          jsr RemoveAllObjects
 
           lda #19
           sta PARAM1
@@ -168,3 +215,6 @@ NUM_BOSSES_DEFEATED
 
 GAME_COMPLETED
           !byte 0
+
+CURRENT_BG
+          !byte 2

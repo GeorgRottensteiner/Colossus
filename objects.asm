@@ -12,6 +12,7 @@ TYPE_BOSS_HEART               = 7
 TYPE_BOSS_SHOT                = 8
 TYPE_PICKUP                   = 9
 TYPE_TONGUE                   = 10
+TYPE_POST                     = 11
 
 SPRITE_POINTER_BASE           = SCREEN_CHAR + 1016
 
@@ -40,6 +41,8 @@ SPRITE_BOSS_SHOT              = SPRITE_BASE + 32
 
 SPRITE_PICKUP                 = SPRITE_BASE + 33
 SPRITE_TONGUE                 = SPRITE_BASE + 34
+
+SPRITE_POST                   = SPRITE_BASE + 35
 
 
 JOY_UP                  = $01
@@ -287,6 +290,8 @@ CreateObjectInSlot
           sta SPRITE_BEHAVIOUR_LO,x
           lda TYPE_START_BEHAVIOR_HI,y
           sta SPRITE_BEHAVIOUR_HI,x
+          lda #3
+          sta SPRITE_SPEED,x
 
           lda TYPE_START_WIDTH_CHARS,y
           sta SPRITE_WIDTH_CHARS,x
@@ -1175,7 +1180,7 @@ SHOT_DELTA_Y
           jsr GenerateRandomNumber
           sta VIC.SPRITE_COLOR,x
 
-          lda #3
+          lda SPRITE_SPEED,x
           sta PARAM3
           jsr DeltaMove
           bne .KeepGoing
@@ -1210,7 +1215,9 @@ SHOT_DELTA_Y
           sta PARAM2
           lda #TYPE_BOSS_SHOT
           sta PARAM3
-          jsr AddObject
+          ldx #2
+          jsr AddObjectStartingWithSlot
+          beq .NoShot
 
           lda SPRITE_CHAR_POS_X
           sta PARAM3
@@ -1219,6 +1226,7 @@ SHOT_DELTA_Y
           stx PARAM5
           jsr CalcDelta
 
+.NoShot
           ldx CURRENT_INDEX
 
 
@@ -1242,6 +1250,49 @@ SHOT_DELTA_Y
           sta SPRITE_IMAGE,x
           rts
 
+
+
+!lzone BHPost
+          inc SPRITE_STATE_POS,x
+          lda SPRITE_STATE_POS,x
+          cmp #$7f
+          bne +
+
+          jsr GenerateRandomNumber
+          and #$0f
+          sta SPRITE_STATE_POS,x
+
+          ;spawn shot
+          jsr GenerateRandomNumber
+          and #$01
+          clc
+          adc SPRITE_CHAR_POS_X,x
+          sta PARAM1
+
+          jsr GenerateRandomNumber
+          and #$01
+          clc
+          adc SPRITE_CHAR_POS_Y,x
+          sta PARAM2
+          lda #TYPE_BOSS_SHOT
+          sta PARAM3
+          ldx #2
+          jsr AddObjectStartingWithSlot
+          beq .NoShot
+
+          lda #1
+          sta SPRITE_SPEED,x
+
+          lda SPRITE_CHAR_POS_X
+          sta PARAM3
+          lda SPRITE_CHAR_POS_Y
+          sta PARAM4
+          stx PARAM5
+          jsr CalcDelta
+
+.NoShot
+          ldx CURRENT_INDEX
+          rts
 
 
 !lzone BHTitleEye
@@ -1967,6 +2018,7 @@ IS_TYPE_ENEMY = * - 1
           !byte 6     ;boss shot
           !byte 2     ;health
           !byte 2     ;tongue
+          !byte 1     ;post
 
 TYPE_START_SPRITE_OFFSET_X = * - 1
           !byte 0     ;player bottom
@@ -1979,6 +2031,7 @@ TYPE_START_SPRITE_OFFSET_X = * - 1
           !byte 0     ;boss shot
           !byte 0     ;health
           !byte 0     ;tongue
+          !byte 0     ;post
 
 TYPE_START_SPRITE_OFFSET_Y = * - 1
           !byte 0     ;player bottom
@@ -1991,6 +2044,7 @@ TYPE_START_SPRITE_OFFSET_Y = * - 1
           !byte 0     ;boss shot
           !byte 0     ;health
           !byte 0     ;tongue
+          !byte 0     ;post
 
 TYPE_START_HEIGHT_CHARS = * - 1
           !byte 2     ;player bottom
@@ -2003,6 +2057,7 @@ TYPE_START_HEIGHT_CHARS = * - 1
           !byte 1     ;boss shot
           !byte 2     ;health
           !byte 5     ;tongue
+          !byte 2     ;post
 
 TYPE_START_WIDTH_CHARS = * - 1
           !byte 1     ;player
@@ -2015,6 +2070,7 @@ TYPE_START_WIDTH_CHARS = * - 1
           !byte 1     ;boss shot
           !byte 2     ;health
           !byte 3     ;tongue
+          !byte 1     ;post
 
 TYPE_START_SPRITE = * - 1
           !byte SPRITE_PLAYER_RIGHT
@@ -2027,9 +2083,10 @@ TYPE_START_SPRITE = * - 1
           !byte SPRITE_BOSS_SHOT
           !byte SPRITE_PICKUP
           !byte SPRITE_TONGUE
+          !byte SPRITE_POST
 
 TYPE_START_COLOR = * - 1
-          !byte $8C   ;player bottom
+          !byte $8f   ;player bottom
           !byte $07   ;player shot
           !byte $85   ;larva
           !byte $02   ;explosion
@@ -2039,6 +2096,7 @@ TYPE_START_COLOR = * - 1
           !byte $8d   ;boss shot
           !byte $8a   ;health
           !byte $8a   ;tongue
+          !byte $8c   ;post
 
 SF_DOUBLE_V             = $01     ;two sprites on top of each other
 SF_DOUBLE_H             = $02     ;two sprites beside each other
@@ -2058,6 +2116,7 @@ TYPE_START_SPRITE_FLAGS = * - 1
           !byte 0     ;boss shot
           !byte 0     ;health
           !byte SF_EXPAND_X | SF_EXPAND_Y   ;tongue
+          !byte 0     ;post
 
 TYPE_START_SPRITE_HP = * - 1
           !byte 3     ;player
@@ -2070,6 +2129,7 @@ TYPE_START_SPRITE_HP = * - 1
           !byte 200   ;boss shot
           !byte 0     ;health
           !byte 0     ;tongue
+          !byte 5     ;post
 
 TYPE_START_BEHAVIOR_LO = * - 1
           !byte <BHPlayer
@@ -2082,6 +2142,7 @@ TYPE_START_BEHAVIOR_LO = * - 1
           !byte <BHBossShot
           !byte <BHPickup
           !byte <BHNone
+          !byte <BHPost
 
 TYPE_START_BEHAVIOR_HI = * - 1
           !byte >BHPlayer
@@ -2094,6 +2155,7 @@ TYPE_START_BEHAVIOR_HI = * - 1
           !byte >BHBossShot
           !byte >BHPickup
           !byte >BHNone
+          !byte >BHPost
 
 SPRITE_POS_X_EXTEND
           !byte 0
@@ -2129,6 +2191,8 @@ SPRITE_MOVE_POS
 SPRITE_MOVE_POS_Y
           !byte 0,0,0,0,0,0,0,0
 SPRITE_BASE_IMAGE
+          !byte 0,0,0,0,0,0,0,0
+SPRITE_SPEED
           !byte 0,0,0,0,0,0,0,0
 SPRITE_STATE
           !byte 0,0,0,0,0,0,0,0
