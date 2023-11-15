@@ -466,7 +466,6 @@ FindEmptySpriteSlot
 
 !lzone RemoveAllObjectsButPlayer
           ldx #1
-.Loop
 -
           lda #TYPE_NONE
           sta SPRITE_ACTIVE,x
